@@ -1,4 +1,4 @@
-# asa-date-picker Library Documentation
+# Asa-Date-Picker
 
 ## Overview
 The asa-date-picker library is a versatile and customizable Angular component designed to facilitate date and time selection in web applications. It supports both Gregorian and Jalali (Persian) calendars, offers single date and range selection modes, and includes features such as time picking, input masking, and RTL (Right-to-Left) layout support. The library leverages Angular's reactive forms for robust form integration and uses the Angular CDK for overlay functionality to display the date picker popup.
