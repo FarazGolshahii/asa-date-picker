@@ -1,0 +1,140 @@
+
+<div class="time-picker-wrapper" [formGroup]="form">
+  <!-- Regular input mode -->
+  <ng-container *ngIf="!inline">
+    <div class="input-wrapper" [class.focus]="isOpen" [class.disabled]="disabled">
+      <input
+        #timePickerInput
+        [asa-dateMask]="displayFormat"
+        [disableInputMask]="disableInputMask"
+        [class.disabled]="disabled"
+        type="text"
+        class="time-picker-input"
+        [class.focus]="isOpen"
+        formControlName="timeInput"
+        (focus)="onFocusInput()"
+        [placeholder]="placeholder"
+        [readonly]="readOnly || readOnlyInput"
+        [attr.disabled]="disabled? 'disabled':null"
+      >
+      <button *ngIf="showIcon" class="time-button" (click)="toggleTimePicker($event)" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      </button>
+    </div>
+
+    <ng-template
+      cdkConnectedOverlay
+      nzConnectedOverlay
+      [cdkConnectedOverlayOrigin]="origin"
+      [cdkConnectedOverlayOpen]="isOpen"
+      [cdkConnectedOverlayPositions]="overlayPositions"
+      [cdkConnectedOverlayTransformOriginOn]="'.time-picker-popup'"
+      [cdkConnectedOverlayHasBackdrop]="false"
+      (positionChange)="onPositionChange($event)"
+      (detach)="close()"
+    >
+      <ng-container *ngTemplateOutlet="timePickerContent"></ng-container>
+    </ng-template>
+  </ng-container>
+
+  <!-- Inline mode -->
+  <ng-container *ngIf="inline">
+    <ng-container *ngTemplateOutlet="timePickerContent"></ng-container>
+  </ng-container>
+
+  <!-- Time Picker Content Template -->
+  <ng-template #timePickerContent>
+    <div
+      #popupWrapper
+      [class]="'time-picker-popup ' + cssClass"
+      [@slideMotion]="'enter'"
+      [class.inline]="inline"
+      [class.disabled]="disabled"
+      style="position: relative"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="time-picker-content">
+        <div class="time-columns">
+          <!-- Hours -->
+          <div class="time-column">
+            <div class="time-scroller">
+              <button
+                *ngFor="let hour of hours"
+                [id]="'selector_h'+hour"
+                [class.selected]="selectedTime.hour === hour"
+                [class.disabled]="isHourDisabled(hour)"
+                (click)="selectHour(hour)"
+                type="button"
+              >
+                {{ hour.toString().padStart(2, '0') }}
+              </button>
+            </div>
+          </div>
+
+          <div class="time-separator">:</div>
+
+          <!-- Minutes -->
+          <div class="time-column">
+            <div class="time-scroller">
+              <button
+                *ngFor="let minute of minutes"
+                [id]="'selector_m'+minute"
+                [class.selected]="selectedTime.minute === minute"
+                [class.disabled]="isMinuteDisabled(minute)"
+                (click)="selectMinute(minute)"
+                type="button"
+              >
+                {{ minute.toString().padStart(2, '0') }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Seconds (if format includes seconds) -->
+          <ng-container *ngIf="showSeconds">
+            <div class="time-separator">:</div>
+            <div class="time-column">
+              <div class="time-scroller">
+                <button
+                  *ngFor="let second of seconds"
+                  [id]="'selector_s'+second"
+                  [class.selected]="selectedTime.second === second"
+                  [class.disabled]="isSecondDisabled(second)"
+                  (click)="selectSecond(second)"
+                  type="button"
+                >
+                  {{ second.toString().padStart(2, '0') }}
+                </button>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- AM/PM (only in 12-hour format) -->
+          <ng-container *ngIf="timeFormat === '12'">
+            <div class="time-column period">
+              <button
+                *ngFor="let period of periods"
+                [class.selected]="selectedTime.period === period"
+                (click)="selectPeriod(period)"
+                type="button"
+              >
+                {{ period }}
+              </button>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="time-picker-footer" *ngIf="!inline">
+        <div class="footer-buttons">
+          <button class="now-btn" (click)="selectNow()" type="button">{{ lang.now }}</button>
+        </div>
+        <div class="footer-actions">
+          <button class="save-btn" (click)="save()" type="button">{{ lang.ok }}</button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>
