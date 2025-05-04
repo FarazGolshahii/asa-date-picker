@@ -1,0 +1,84 @@
+{
+  "name": "asa-date-picker",
+  "version": "0.0.20",
+  "description": "An Angular date picker component supporting Gregorian and Persian (Jalali/Shamsi) calendars, powered by Asa Co.",
+  "author": {
+    "name": "Asa Co.",
+    "email": "info@asax.ir",
+    "url": "https://asax.ir"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FarazGolshahii/asa-date-picker"
+  },
+  "keywords": [
+    "angular",
+    "datepicker",
+    "date-picker",
+    "calendar",
+    "date",
+    "time",
+    "picker",
+    "component",
+    "ui",
+    "forms",
+    "angular-component",
+    "ng",
+    "jalali",
+    "shamsi",
+    "persian",
+    "iranian",
+    "khorshidi",
+    "farsi",
+    "gregorian",
+    "date-fns",
+    "date-fns-jalali",
+    "internationalization",
+    "i18n",
+    "localization",
+    "l10n",
+    "typescript"
+  ],
+  "peerDependencies": {
+    "@angular/common": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "@angular/core": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "@angular/forms": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "@angular/cdk": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "date-fns": "^4.1.0",
+    "date-fns-jalali": "^4.1.0-0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "date-fns": "^4.1.0",
+    "date-fns-jalali": "^4.1.0-0"
+  },
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "build:lib": "ng-packagr -p ng-package.json",
+    "publish:lib": "cd dist/asa-date-picker && npm publish --access public",
+    "lint": "ng lint",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.14.0"
+  },
+  "bugs": {
+    "url": "https://github.com/FarazGolshahii/asa-date-picker/issues"
+  },
+  "private": false,
+  "exports": {
+    "./styles.css": {
+      "style": "./styles.css"
+    }
+  }
+}

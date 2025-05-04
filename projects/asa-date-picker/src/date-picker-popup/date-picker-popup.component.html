@@ -1,0 +1,150 @@
+
+<div class="date-picker-popup" [class.rtl]="rtl" [class]="cssClass" tabindex="-1">
+  <div class="date-picker-content">
+    <ng-container *ngIf="showSidebar">
+      <div *ngIf="isRange" class="period-selector">
+        <button
+          *ngFor="let period of periods"
+          tabindex="-1"
+          [class.active]="isActivePeriod(period)"
+          (click)="selectPeriod(period)"
+        >
+          {{ period.label }}
+          <span *ngIf="period.arrow" class="arrow">→</span>
+        </button>
+      </div>
+      <div *ngIf="!isRange" class="side-selector" #itemSelector >
+        <ng-container *ngIf="viewMode == 'days'">
+          <button
+            *ngFor="let month of monthListNum"
+            tabindex="-1"
+            [id]="'selector_'+month"
+            [class.active]="isActiveMonth(month)"
+            [disabled]="isMonthDisabled(month)"
+            (click)="selectMonth(month, false)">
+            {{ getMonthName(month) }}
+          </button>
+        </ng-container>
+        <ng-container *ngIf="viewMode == 'months'">
+          <button
+            *ngFor="let year of yearList"
+            tabindex="-1"
+            [id]="'selector_'+year"
+            [class.active]="isActiveYear(year)"
+            [disabled]="isYearDisabled(year)"
+            (click)="selectYear(year, true)"
+          >
+            {{ year }}
+          </button>
+        </ng-container>
+        <ng-container *ngIf="viewMode == 'years'">
+          <button
+            tabindex="-1"
+            *ngFor="let yearRange of yearRanges"
+            [id]="'selector_'+yearRange.start"
+            [class.active]="isActiveYearRange(yearRange.start)"
+            [disabled]="isYearRangeDisabled(yearRange)"
+            (click)="selectYearRange(yearRange.start)"
+          >
+            {{ yearRange.start }} - {{ yearRange.end }}
+          </button>
+        </ng-container>
+      </div>
+    </ng-container>
+    <div class="calendar-backdrop" *ngIf="disableCalendarInteraction"></div>
+    <div class="calendar">
+      <div class="header">
+        <button class="asa-calendar-nav-left" (click)="goPrev()" [disabled]="isPrevMonthDisabled()" tabindex="-1"></button>
+        <span class="month-year">
+              <span *ngIf="mode != 'year'" class="month-name" (click)="showMonthSelector()">{{ getCurrentMonthName() }}</span>
+              <span class="year" (click)="showYearSelector()">{{ getCurrentYear() }}</span>
+            </span>
+        <button class="asa-calendar-nav-right" (click)="goNext()" [disabled]="isNextMonthDisabled()" tabindex="-1"></button>
+      </div>
+      <div *ngIf="viewMode == 'days'">
+        <div *ngIf="viewMode === 'days'" class="weekdays">
+          <span *ngFor="let day of getWeekDays()">{{ day }}</span>
+        </div>
+        <div *ngIf="viewMode === 'days'" class="days">
+          <button
+            *ngFor="let day of days"
+            tabindex="-1"
+            [class.different-month]="!isSameMonth(day, currentDate)"
+            [class.selected]="isSelected(day)"
+            [class.in-range]="isInRange(day)"
+            [class.range-start]="isRangeStart(day)"
+            [class.range-end]="isRangeEnd(day)"
+            [class.today]="isToday(day)"
+            [class.disabled]="isDateDisabled(day)"
+            [disabled]="isDateDisabled(day)"
+            (click)="selectDate(day)"
+            (mouseenter)="onMouseEnter(day,$event)"
+          >
+            <ng-container *ngIf="dayTemplate; else dayDefTemplate">
+              <ng-container *ngTemplateOutlet="$any(dayTemplate); context: { $implicit: day }"></ng-container>
+            </ng-container>
+            <ng-template #dayDefTemplate>
+              {{ dateAdapter.getDate(day) }}
+            </ng-template>
+          </button>
+        </div>
+      </div>
+      <div *ngIf="viewMode === 'months'" class="months">
+        <button
+          *ngFor="let month of monthListNum"
+          tabindex="-1"
+          [class.selected]="month === dateAdapter.getMonth(currentDate) + 1"
+          [disabled]="isMonthDisabled(month)"
+          (click)="selectMonth(month,false)"
+        >
+          <ng-container *ngIf="monthTemplate; else monthDefTemplate">
+            <ng-container *ngTemplateOutlet="$any(monthTemplate); context: { $implicit: month }"></ng-container>
+          </ng-container>
+          <ng-template #monthDefTemplate>
+            {{ getMonthName(month) }}
+          </ng-template>
+        </button>
+      </div>
+      <div *ngIf="viewMode === 'years' || mode == 'year'" class="years">
+        <button
+          *ngFor="let year of yearList"
+          tabindex="-1"
+          [class.selected]="year === dateAdapter.getYear(currentDate)"
+          [disabled]="isYearDisabled(year)"
+          (click)="selectYear(year)"
+        >
+          <ng-container *ngIf="yearTemplate; else yearDefTemplate">
+            <ng-container *ngTemplateOutlet="$any(yearTemplate); context: { $implicit: year }"></ng-container>
+          </ng-container>
+          <ng-template #yearDefTemplate>
+            {{ year }}
+          </ng-template>
+        </button>
+      </div>
+    </div>
+
+    <!-- Time Picker Integration -->
+    <div *ngIf="showTimePicker" class="time-picker-section">
+      <asa-time-picker
+        #timePicker
+        [rtl]="rtl"
+        [dateAdapter]="dateAdapter"
+        [valueType]="'date'"
+        [displayFormat]="timeDisplayFormat"
+        [inline]="true"
+        [disabledTimesFilter]="disabledTimesFilter"
+        [cssClass]="'embedded-time-picker'"
+        [selectedDate]="selectedDate"
+        (timeChange)="onTimeChange($event)"
+      ></asa-time-picker>
+    </div>
+  </div>
+  <div class="date-picker-footer" *ngIf="footerDescription || showTimePicker || showToday">
+    <div class="footer-description" *ngIf="footerDescription" [innerHtml]="footerDescription">
+    </div>
+    <div class="footer-actions">
+      <button *ngIf="showTimePicker" class="footer-button ok" (click)="onOkClick()">{{ lang.ok }}</button>
+      <button *ngIf="showToday" class="footer-button" (click)="onTodayClick()">{{ lang.today }}</button>
+    </div>
+  </div>
+</div>

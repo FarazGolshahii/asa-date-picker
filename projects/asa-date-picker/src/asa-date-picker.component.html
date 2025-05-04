@@ -1,0 +1,147 @@
+<div asaDatepickerStyles class="date-picker-wrapper" *ngIf="form" [class.date-picker-rtl]="rtl" [class.disabled]="disabled" [formGroup]="form">
+  <ng-container *ngIf="!isInline; else inlineMode">
+    <ng-container *ngIf="!isRange; else rangeMode">
+      <div class="input-container" [class.rtl]>
+        <input
+          #datePickerInput
+          type="text"
+          [style]="customStyle"
+          formControlName="dateInput"
+          [asa-dateMask]="format"
+          [disableInputMask]="disableInputMask"
+          (click)="toggleDatePicker(null,$event)"
+          (focus)="onFocusInput(null,$event)"
+          (blur)="onInputBlur(null,$event)"
+          (keydown)="onInputKeydown($event)"
+          [class.focus]="isOpen"
+          [placeholder]="inputPlaceholder"
+          [readonly]="readOnly || readOnlyInput"
+          [attr.disabled]="disabled? 'disabled':null"
+        >
+        <label [class.active]="form?.get('dateInput').value || isFocused"
+               [class.has-value]="form?.get('dateInput').value">{{ inputLabel }}</label>
+        <!--        <ng-container *ngTemplateOutlet="icon"></ng-container>-->
+      </div>
+    </ng-container>
+    <ng-template #rangeMode>
+      <div *ngIf="rangeInputLabels" class="range-input-labels">
+        <div class="start-label">
+          <label >{{ rangeInputLabels.start }}</label>
+        </div>
+        <div class="end-label">
+          <label >{{ rangeInputLabels.end }}</label>
+        </div>
+      </div>
+      <div class="range-input-container">
+        <input
+          #rangePickerInput
+          type="text"
+          [style]="customStyle"
+          formControlName="startDateInput"
+          [asa-dateMask]="format"
+          [disableInputMask]="disableInputMask"
+          (click)="toggleDatePicker('start',$event)"
+          (focus)="onFocusInput('start',$event)"
+          (focusout)="onFocusout($event)"
+          (blur)="onInputBlur('start',$event)"
+          (keydown)="onInputKeydown($event)"
+          [class.focus]="isOpen && activeInput === 'start'"
+          [placeholder]="getPlaceholder('start')"
+          [readonly]="readOnly || readOnlyInput"
+          [attr.disabled]="disabled? 'disabled':null"
+        >
+        <span class="range-separator">→</span>
+        <input
+          #rangePickerInput
+          type="text"
+          formControlName="endDateInput"
+          [style]="customStyle"
+          [asa-dateMask]="format"
+          [disableInputMask]="disableInputMask"
+          (click)="toggleDatePicker('end',$event)"
+          (focus)="onFocusInput('end',$event)"
+          (focusout)="onFocusout($event)"
+          (blur)="onInputBlur('end',$event)"
+          (keydown)="onInputKeydown($event)"
+          [class.focus]="isOpen && activeInput === 'end'"
+          [placeholder]="getPlaceholder('end')"
+          [readonly]="readOnly || readOnlyInput"
+          [attr.disabled]="disabled? 'disabled':null"
+        >
+        <!--        <ng-container *ngTemplateOutlet="icon"></ng-container>-->
+      </div>
+    </ng-template>
+    <!--    <ng-template #icon>-->
+    <!--      <button class="calendar-button" (click)="toggleDatePicker(null, $event)" tabindex="-1">-->
+    <!--        <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 24 24" fill="#999">-->
+    <!--          <path fill-rule="evenodd" clip-rule="evenodd" d="M6 2C6 1.44772 6.44772 1 7 1C7.55228 1 8 1.44772 8 2V3H16V2C16 1.44772 16.4477 1 17 1C17.5523 1 18 1.44772 18 2V3H19C20.6569 3 22 4.34315 22 6V20C22 21.6569 20.6569 23 19 23H5C3.34315 23 2 21.6569 2 20V6C2 4.34315 3.34315 3 5 3H6V2ZM16 5V6C16 6.55228 16.4477 7 17 7C17.5523 7 18 6.55228 18 6V5H19C19.5523 5 20 5.44772 20 6V9H4V6C4 5.44772 4.44772 5 5 5H6V6C6 6.55228 6.44772 7 7 7C7.55228 7 8 6.55228 8 6V5H16ZM4 11V20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20V11H4Z" fill="#999"/>-->
+    <!--        </svg>-->
+    <!--      </button>-->
+    <!--    </ng-template>-->
+  </ng-container>
+  <ng-template #inlineMode>
+    <div
+      class="dp-dropdown"
+      [class.asa-picker-dropdown-rtl]="rtl"
+      [class.asa-picker-dropdown-placement-bottomLeft]="currentPositionY === 'bottom' && currentPositionX === 'start'"
+      [class.asa-picker-dropdown-placement-topLeft]="currentPositionY === 'top' && currentPositionX === 'start'"
+      [class.asa-picker-dropdown-placement-bottomRight]="currentPositionY === 'bottom' && currentPositionX === 'end'"
+      [class.asa-picker-dropdown-placement-topRight]="currentPositionY === 'top' && currentPositionX === 'end'"
+      [class.asa-picker-dropdown-range]="isRange"
+    >
+      <asa-date-picker-popup
+        [rtl]="rtl"
+        [@slideMotion]="'enter'"
+        [selectedDate]="selectedDate"
+        [selectedStartDate]="selectedStartDate"
+        [selectedEndDate]="selectedEndDate"
+        [mode]="mode"
+        [isRange]="isRange"
+        [customLabels]="customLabels"
+        [calendarType]="calendarType"
+        [minDate]="minDate"
+        [maxDate]="maxDate"
+        [cssClass]="cssClass"
+        [footerDescription]="footerDescription"
+        [activeInput]="activeInput"
+        [showSidebar]="showSidebar"
+        [disableCalendarInteraction]="disableCalendarInteraction"
+        [showToday]="showToday"
+        [showTimePicker]="showTimePicker"
+        [timeDisplayFormat]="timeDisplayFormat"
+        [dateFormat]="extractDateFormat(format)"
+        [disabledDates]="disabledDates"
+        [disabledDatesFilter]="disabledDatesFilter"
+        [disabledTimesFilter]="disabledTimesFilter"
+        [templates]="templates"
+        (dateSelected)="onDateSelected($event)"
+        (dateRangeSelected)="onDateRangeSelected($event)"
+        (closePicker)="close()"
+        (clickInside)="focus()"
+        tabindex="-1"
+        [attr.disabled]="disabled? 'disabled':null"
+      ></asa-date-picker-popup>
+    </div>
+  </ng-template>
+  <ng-template
+    cdkConnectedOverlay
+    nzConnectedOverlay
+    [cdkConnectedOverlayOrigin]="origin"
+    [cdkConnectedOverlayOpen]="isOpen"
+    [cdkConnectedOverlayPositions]="overlayPositions"
+    [cdkConnectedOverlayTransformOriginOn]="'.asa-picker-wrapper'"
+    [cdkConnectedOverlayHasBackdrop]="false"
+    (positionChange)="onPositionChange($event)"
+    (detach)="close()"
+  >
+    <div
+      class="asa-picker-wrapper"
+      [class.disabled]="disabled"
+      [@slideMotion]="'enter'"
+      style="position: relative;"
+      (click)="$event.stopPropagation()"
+    >
+      <ng-container *ngTemplateOutlet="inlineMode"></ng-container>
+    </div>
+  </ng-template>
+</div>
