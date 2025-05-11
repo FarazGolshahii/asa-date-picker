@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="./logo.png" alt="Package Name" width="200" height="200"/>
+</p>
+
+
 # Asa-Date-Picker
 
 ## Overview
