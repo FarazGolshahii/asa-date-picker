@@ -1,5 +1,6 @@
-
-<div class="time-picker-wrapper" [formGroup]="form">
+<div class="time-picker-wrapper" [ngClass]="{
+       'time-picker-wrapper-column':isTimerVertical}"
+     [formGroup]="form">
   <!-- Regular input mode -->
   <ng-container *ngIf="!inline">
     <div class="input-wrapper" [class.focus]="isOpen" [class.disabled]="disabled">
@@ -18,7 +19,8 @@
         [attr.disabled]="disabled? 'disabled':null"
       >
       <button *ngIf="showIcon" class="time-button" (click)="toggleTimePicker($event)" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999"
+             stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <path d="M12 6v6l4 2"/>
         </svg>
@@ -50,6 +52,7 @@
     <div
       #popupWrapper
       [class]="'time-picker-popup ' + cssClass"
+      [ngClass]="{'time-picker-popup-column':isTimerVertical}"
       [@slideMotion]="'enter'"
       [class.inline]="inline"
       [class.disabled]="disabled"
@@ -60,13 +63,15 @@
         <div class="time-columns">
           <!-- Hours -->
           <div class="time-column">
-            <div class="time-scroller">
+            <div class="time-scroller" (wheel)="isTimerVertical?onTimeScroll($event, 'hour'):null">
               <button
                 *ngFor="let hour of hours"
                 [id]="'selector_h'+hour"
                 [class.selected]="selectedTime.hour === hour"
                 [class.disabled]="isHourDisabled(hour)"
                 (click)="selectHour(hour)"
+                (focus)="onTimeButtonFocus('hour')"
+                [tabindex]="selectedTime.hour === hour ? 0 : -1"
                 type="button"
               >
                 {{ hour.toString().padStart(2, '0') }}
@@ -78,12 +83,14 @@
 
           <!-- Minutes -->
           <div class="time-column">
-            <div class="time-scroller">
+            <div (wheel)="isTimerVertical?onTimeScroll($event, 'minute'):null" class="time-scroller">
               <button
                 *ngFor="let minute of minutes"
                 [id]="'selector_m'+minute"
                 [class.selected]="selectedTime.minute === minute"
                 [class.disabled]="isMinuteDisabled(minute)"
+                (focus)="onTimeButtonFocus('minute')"
+                [tabindex]="selectedTime.minute === minute ? 0 : -1"
                 (click)="selectMinute(minute)"
                 type="button"
               >
@@ -96,13 +103,15 @@
           <ng-container *ngIf="showSeconds">
             <div class="time-separator">:</div>
             <div class="time-column">
-              <div class="time-scroller">
+              <div (wheel)="isTimerVertical?onTimeScroll($event, 'second'):null" class="time-scroller">
                 <button
                   *ngFor="let second of seconds"
                   [id]="'selector_s'+second"
                   [class.selected]="selectedTime.second === second"
                   [class.disabled]="isSecondDisabled(second)"
                   (click)="selectSecond(second)"
+                  (focus)="onTimeButtonFocus('second')"
+                  [tabindex]="selectedTime.second === second ? 0 : -1"
                   type="button"
                 >
                   {{ second.toString().padStart(2, '0') }}

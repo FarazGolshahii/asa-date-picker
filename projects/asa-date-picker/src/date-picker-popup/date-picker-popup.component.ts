@@ -22,7 +22,7 @@ import {DestroyService, AsaDatePickerService} from '../asa-date-picker.service';
 import {CalendarType, DatepickerMode} from '../utils/types';
 import {TimePickerComponent} from '../time-picker/time-picker.component';
 import {takeUntil} from 'rxjs';
-import {NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
+import {NgClass, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
 import {CustomTemplate} from '../utils/template.directive';
 
 @Component({
@@ -33,7 +33,10 @@ import {CustomTemplate} from '../utils/template.directive';
     NgIf,
     NgFor,
     NgTemplateOutlet,
-    TimePickerComponent
+    TimePickerComponent,
+    TimePickerComponent,
+    TimePickerComponent,
+    NgClass
   ],
   templateUrl: './date-picker-popup.component.html',
   styleUrls: ['./date-picker-popup.component.scss']
@@ -62,7 +65,7 @@ export class DatePickerPopupComponent implements OnInit, OnChanges, AfterViewIni
   @Input() disabledDatesFilter!: (date: Date) => boolean;
   @Input() disabledTimesFilter!: (date: Date) => boolean;
   @Input() templates!: QueryList<CustomTemplate>;
-
+  @Input() isTimerVertical!: boolean;
   // ========== Output Properties ==========
   @Output() dateSelected = new EventEmitter<Date>();
   @Output() dateRangeSelected = new EventEmitter<DateRange>();

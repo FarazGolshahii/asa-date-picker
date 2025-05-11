@@ -49,8 +49,16 @@ $text-color-disabled: #aaa;
 
   &-content {
     display: flex;
+  }
+
+  &-content-row {
     flex-direction: row;
     max-height: 295px;
+  }
+
+  &-content-column {
+    flex-direction: column;
+    max-height: 343px;
   }
 
   &-footer {
@@ -252,6 +260,7 @@ $text-color-disabled: #aaa;
     font-size: 14px;
     position: relative;
     border-radius: 7px;
+
     &.selected {
       background-color: $primary-medium;
       color: black;
@@ -372,15 +381,24 @@ button:disabled {
 
 .time-picker-section {
   border-inline-start: 1px solid $border-color;
+  border-top: 1px solid #f0f0f0;
 }
 
 .calendar-backdrop {
   position: absolute;
   top: 0;
   right: 0;
-  width: 401px;
-  height: 100%;
   backdrop-filter: blur(5px);
   z-index: 10;
   pointer-events: all;
+
+  &-row {
+    width: 401px;
+    height: 100%;
+  }
+
+  &-column {
+    width: 100%;
+    height: 77%;
+  }
 }

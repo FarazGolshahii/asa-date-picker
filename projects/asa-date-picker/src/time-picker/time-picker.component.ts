@@ -19,7 +19,7 @@ import { AsaDatePickerService } from '../asa-date-picker.service';
 import { AsaDateAdapter, GregorianDateAdapter, JalaliDateAdapter } from '../asa-date-adapter';
 import { TimeConfig, TimeFormat, TimeValueType } from '../utils/types';
 import { DEFAULT_DATE_PICKER_POSITIONS, NzConnectedOverlayDirective } from "../utils/overlay/overlay"
-import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
+import {NgClass, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
 import { DateMaskDirective } from '../utils/input-mask.directive';
 
 @Component({
@@ -35,7 +35,8 @@ import { DateMaskDirective } from '../utils/input-mask.directive';
     NgTemplateOutlet,
     OverlayModule,
     NzConnectedOverlayDirective,
-    DateMaskDirective
+    DateMaskDirective,
+    NgClass
   ],
   providers: [
     AsaDatePickerService,
@@ -68,6 +69,8 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
   @Input() allowEmpty = true;
   @Input() readOnly = false;
   @Input() readOnlyInput = false;
+  @Input() isTimerVertical!: boolean;
+
   @Input() set displayFormat(value: string) {
     this._displayFormat = value;
     this.showSeconds = value.toLowerCase().includes('s');
@@ -76,15 +79,18 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
     this.updateHourRange();
     this.updateTimeDisplay();
   }
+
   get displayFormat(): string {
     return this._displayFormat;
   }
-  @Input() set selectedDate(date: Date){
+
+  @Input() set selectedDate(date: Date) {
     if (date) {
       this._selectedDate = date;
     }
   }
-  get selectedDate() : Date {
+
+  get selectedDate(): Date {
     return this._selectedDate;
   }
 
@@ -94,19 +100,20 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
 
   @ViewChild('timePickerInput') timePickerInput!: ElementRef<HTMLInputElement>;
   @ViewChild('popupWrapper') popupWrapper!: ElementRef<HTMLDivElement>;
-
   timeFormat: TimeFormat = '12';
   private _displayFormat = 'hh:mm a';
   private _value: string | Date | null = null;
   private _selectedDate: Date = new Date();
-  private onChange: (value: any) => void = () => {};
-  private onTouched: () => void = () => {};
+  private onChange: (value: any) => void = () => {
+  };
+  private onTouched: () => void = () => {
+  };
   private timeoutId: number | null = null;
 
   showSeconds = false;
   hours: number[] = [];
-  minutes: number[] = Array.from({ length: 60 }, (_, i) => i);
-  seconds: number[] = Array.from({ length: 60 }, (_, i) => i);
+  minutes: number[] = Array.from({length: 60}, (_, i) => i);
+  seconds: number[] = Array.from({length: 60}, (_, i) => i);
   periods: string[] = [];
   selectedTime: TimeConfig = {
     hour: 12,
@@ -118,6 +125,9 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
   form!: FormGroup;
   origin!: CdkOverlayOrigin;
   overlayPositions = [...DEFAULT_DATE_PICKER_POSITIONS];
+  currentFocusedColumn: 'hour' | 'minute' | 'second' | 'period' | null = null;
+  private isScrolling = false;
+  private scrollTimeout: any = null;
 
   constructor(
     public fb: FormBuilder,
@@ -133,7 +143,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
   }
 
   // Lifecycle hooks
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.updateHourRange();
     this.origin = new CdkOverlayOrigin(this.elementRef);
     this.setupInputSubscription();
@@ -147,8 +157,9 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
     // Auto-open for inline mode
     if (this.inline) {
       this.isOpen = true;
-      this.scrollToTime();
     }
+    await this.scrollToTime();
+    this.isOpen = true;
   }
 
   ngOnDestroy(): void {
@@ -161,7 +172,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
       this.updateLocale();
     }
     if (changes['rtl'] && !changes['dateAdapter']) {
-      this.dateAdapter = this.rtl? this.jalaliAdapter: this.gregorianAdapter;
+      this.dateAdapter = this.rtl ? this.jalaliAdapter : this.gregorianAdapter;
     }
   }
 
@@ -202,8 +213,8 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
   updateHourRange(): void {
     const format = this.getTimeFormatFromDisplayFormat(this._displayFormat);
     this.hours = format === '12'
-      ? Array.from({ length: 12 }, (_, i) => i + 1)
-      : Array.from({ length: 24 }, (_, i) => i);
+      ? Array.from({length: 12}, (_, i) => i + 1)
+      : Array.from({length: 24}, (_, i) => i);
   }
 
   formatTime(date?: Date): string {
@@ -317,10 +328,82 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
   handleKeydown(event: KeyboardEvent): void {
     if (event.key === 'Tab' || event.key === 'Enter') {
       this.handleTimeInput();
-      if (event.key === 'Tab') this.close();
+      this.close();
     } else if (event.key === 'Escape') {
       this.close();
+    } else if (this.isOpen && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      event.preventDefault();
+      this.handleArrowNavigation(event.key === 'ArrowUp' ? -1 : 1);
     }
+  }
+
+  handleArrowNavigation(direction: number): void {
+    if (!this.currentFocusedColumn) return;
+
+    if (this.currentFocusedColumn === 'hour') {
+      const currentIndex = this.hours.findIndex(h => h === this.selectedTime.hour);
+      const nextIndex = this.getNextValidIndex(this.hours, currentIndex, direction, this.isHourDisabled.bind(this));
+      if (nextIndex !== -1) {
+        this.selectHour(this.hours[nextIndex]);
+        this.focusTimeButton('hour', this.hours[nextIndex]);
+      }
+    } else if (this.currentFocusedColumn === 'minute') {
+      const currentIndex = this.minutes.findIndex(m => m === this.selectedTime.minute);
+      const nextIndex = this.getNextValidIndex(this.minutes, currentIndex, direction, this.isMinuteDisabled.bind(this));
+      if (nextIndex !== -1) {
+        this.selectMinute(this.minutes[nextIndex]);
+        this.focusTimeButton('minute', this.minutes[nextIndex]);
+      }
+    } else if (this.currentFocusedColumn === 'second' && this.showSeconds) {
+      const currentIndex = this.seconds.findIndex(s => s === this.selectedTime.second);
+      const nextIndex = this.getNextValidIndex(this.seconds, currentIndex, direction, this.isSecondDisabled.bind(this));
+      if (nextIndex !== -1) {
+        this.selectSecond(this.seconds[nextIndex]);
+        this.focusTimeButton('second', this.seconds[nextIndex]);
+      }
+    } else if (this.currentFocusedColumn === 'period' && this.timeFormat === '12') {
+      const currentIndex = this.periods.findIndex(p => p === this.selectedTime.period);
+      const nextIndex = (currentIndex + direction + this.periods.length) % this.periods.length;
+      this.selectPeriod(this.periods[nextIndex]);
+      this.focusTimeButton('period', this.periods[nextIndex]);
+    }
+  }
+
+  getNextValidIndex(
+    items: any[],
+    currentIndex: number,
+    direction: number,
+    isDisabledFn: (item: any) => boolean
+  ): number {
+    let nextIndex = currentIndex;
+    const totalItems = items.length;
+
+    // Search for the next valid item in the specified direction
+    for (let i = 0; i < totalItems; i++) {
+      nextIndex = (nextIndex + direction + totalItems) % totalItems;
+      if (!isDisabledFn(items[nextIndex])) {
+        return nextIndex;
+      }
+    }
+
+    // If no valid item found, return -1
+    return -1;
+  }
+
+  focusTimeButton(type: 'hour' | 'minute' | 'second' | 'period', value: any): void {
+    setTimeout(() => {
+      const buttonId = type === 'period'
+        ? `period_${value}`
+        : `selector_${type.charAt(0)}${value}`;
+      const button = this.popupWrapper?.nativeElement.querySelector(`#${buttonId}`) as HTMLButtonElement;
+      if (button) {
+        button.focus();
+      }
+    }, 0);
+  }
+
+  onTimeButtonFocus(column: 'hour' | 'minute' | 'second' | 'period'): void {
+    this.currentFocusedColumn = column;
   }
 
   handleTimeInput(): void {
@@ -422,7 +505,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
 
   save(close = true): void {
     const date = this.updateDateFromSelection();
-    const { isValid, normalizedDate } = this.validateAndNormalizeTime(date);
+    const {isValid, normalizedDate} = this.validateAndNormalizeTime(date);
 
     if (!isValid || !normalizedDate) return;
 
@@ -433,7 +516,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
     const valueChanged = JSON.stringify(this._value) !== JSON.stringify(outputValue);
     if (valueChanged) {
       this._value = outputValue;
-      this.form.get('timeInput')?.setValue(this.formatTime(normalizedDate), { emitEvent: false });
+      this.form.get('timeInput')?.setValue(this.formatTime(normalizedDate), {emitEvent: false});
 
       this.onChange(outputValue);
       this.timeChange.emit(outputValue);
@@ -459,10 +542,10 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
         return;
       }
 
-      const { isValid, normalizedDate } = this.validateAndNormalizeTime(parsedDate);
+      const {isValid, normalizedDate} = this.validateAndNormalizeTime(parsedDate);
       // @ts-ignore
       const formattedTime = this.dateAdapter.format(normalizedDate, this._displayFormat);
-      this.form.get('timeInput')?.setValue(formattedTime, { emitEvent: false });
+      this.form.get('timeInput')?.setValue(formattedTime, {emitEvent: false});
       // @ts-ignore
       this.parseTimeString(normalizedDate);
 
@@ -490,7 +573,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
 
   isSecondDisabled(second: number): boolean {
     if (!this.dateAdapter) return false;
-    const testConfig = { ...this.selectedTime, second };
+    const testConfig = {...this.selectedTime, second};
     const testDate = this.createDateWithTime(testConfig);
     return this.isTimeDisabled(testDate);
   }
@@ -517,7 +600,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
 
   validateAndNormalizeTime(date: Date): { isValid: boolean; normalizedDate: Date | null } {
     if (!this.dateAdapter) {
-      return { isValid: false, normalizedDate: null };
+      return {isValid: false, normalizedDate: null};
     }
 
     let isValid = true;
@@ -542,11 +625,11 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
 
       // If still disabled after trying to find valid time
       if (this.isTimeDisabled(normalizedDate)) {
-        return { isValid: false, normalizedDate: null };
+        return {isValid: false, normalizedDate: null};
       }
     }
 
-    return { isValid: isValid, normalizedDate };
+    return {isValid: isValid, normalizedDate};
   }
 
   private isFullHourDisabled(hour: number): boolean {
@@ -632,7 +715,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
 
   updateTimeDisplay(): void {
     if (this.form) {
-      this.form.get('timeInput')?.setValue(this.formatTime(), { emitEvent: false });
+      this.form.get('timeInput')?.setValue(this.formatTime(), {emitEvent: false});
     }
   }
 
@@ -643,7 +726,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
   }
 
   // UI Update methods
-  async scrollToTime(){
+  async scrollToTime() {
     await this.scrollToSelectedItem(`h${this.selectedTime.hour}`, 'auto'),
       await this.scrollToSelectedItem(`m${this.selectedTime.minute}`, 'auto'),
       this.showSeconds ? await this.scrollToSelectedItem(`s${this.selectedTime.second}`, 'auto') : '';
@@ -660,7 +743,7 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
       this.timeoutId = window.setTimeout(() => {
         const selectedElement = this.popupWrapper?.nativeElement.querySelector(`#selector_${id}`);
         if (selectedElement) {
-          selectedElement.scrollIntoView({ behavior, block: 'center' });
+          selectedElement.scrollIntoView({behavior, block: 'center'});
         }
         resolve(true);
       }, 0);
@@ -676,5 +759,82 @@ export class TimePickerComponent implements ControlValueAccessor, OnInit, OnDest
 
   onPositionChange(position: ConnectedOverlayPositionChange): void {
     this.cdref.detectChanges();
+  }
+
+  onTimeScroll(event: WheelEvent, type: 'hour' | 'minute' | 'second' | 'period'): void {
+    event.preventDefault();
+
+    // If already scrolling, return to prevent rapid successive scrolls
+    if (this.isScrolling) return;
+
+    this.isScrolling = true;
+
+    // Determine direction: negative delta means scroll down (next value)
+    const direction = event.deltaY > 0 ? 1 : -1;
+
+    // Perform the appropriate action based on the column type
+    switch (type) {
+      case 'hour':
+        this.changeHour(direction);
+        break;
+      case 'minute':
+        this.changeMinute(direction);
+        break;
+      case 'second':
+        this.changeSecond(direction);
+        break;
+    }
+
+    // Clear any existing timeout
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+
+    // Set a timeout to allow next scroll action
+    this.scrollTimeout = setTimeout(() => {
+      this.isScrolling = false;
+    }, 200); // Adjust timing as needed for comfort
+  }
+
+  changeHour(direction: number): void {
+    let currentIndex = this.hours.indexOf(this.selectedTime.hour);
+    let newIndex = (currentIndex + direction + this.hours.length) % this.hours.length;
+
+    // Find next enabled hour
+    while (this.isHourDisabled(this.hours[newIndex]) && newIndex !== currentIndex) {
+      newIndex = (newIndex + direction + this.hours.length) % this.hours.length;
+    }
+
+    if (!this.isHourDisabled(this.hours[newIndex])) {
+      this.selectHour(this.hours[newIndex]);
+    }
+  }
+
+  changeMinute(direction: number): void {
+    let currentIndex = this.minutes.indexOf(this.selectedTime.minute);
+    let newIndex = (currentIndex + direction + this.minutes.length) % this.minutes.length;
+
+    // Find next enabled minute
+    while (this.isMinuteDisabled(this.minutes[newIndex]) && newIndex !== currentIndex) {
+      newIndex = (newIndex + direction + this.minutes.length) % this.minutes.length;
+    }
+
+    if (!this.isMinuteDisabled(this.minutes[newIndex])) {
+      this.selectMinute(this.minutes[newIndex]);
+    }
+  }
+
+  changeSecond(direction: number): void {
+    let currentIndex = this.seconds.indexOf(this.selectedTime.second);
+    let newIndex = (currentIndex + direction + this.seconds.length) % this.seconds.length;
+
+    // Find next enabled second
+    while (this.isSecondDisabled(this.seconds[newIndex]) && newIndex !== currentIndex) {
+      newIndex = (newIndex + direction + this.seconds.length) % this.seconds.length;
+    }
+
+    if (!this.isSecondDisabled(this.seconds[newIndex])) {
+      this.selectSecond(this.seconds[newIndex]);
+    }
   }
 }

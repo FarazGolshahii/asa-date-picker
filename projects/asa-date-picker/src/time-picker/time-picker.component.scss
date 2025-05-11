@@ -38,6 +38,12 @@ $focus-shadow-color: rgba(24, 144, 255, 0.2);
 
 .time-picker-wrapper {
   display: inline-block;
+
+  &-column {
+    width: 100%;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 
 .input-wrapper {
@@ -53,7 +59,7 @@ $focus-shadow-color: rgba(24, 144, 255, 0.2);
     outline: none;
   }
 
-  &.disabled{
+  &.disabled {
     background: #fafafa;
   }
 }
@@ -104,10 +110,6 @@ input {
       height: 100%;
     }
 
-    .time-columns {
-      padding: 4px;
-    }
-
     .time-column {
       &::-webkit-scrollbar {
         width: 6px;
@@ -133,7 +135,7 @@ input {
 }
 
 .time-picker-content {
-  padding: 8px;
+  padding: 0 8px 0 8px;
   height: calc(100% - 59px);
 }
 
@@ -141,7 +143,7 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 0 8px 0 8px;
   gap: 8px;
   height: 100%;
 }
@@ -184,6 +186,9 @@ input {
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-height: 80px;
+  padding-top: 4px;
+  scroll-behavior: smooth;
 }
 
 .time-separator {
@@ -239,12 +244,18 @@ button {
   }
 }
 
-.embedded-time-picker{
+.embedded-time-picker {
   &.time-picker-popup {
     .time-picker-content {
       height: 100%;
     }
+
+    &-column {
+      max-height: 37px !important;
+      width: 100%;
+    }
   }
+
   &.time-picker-popup.inline {
     border: none;
     border-radius: 0;

@@ -112,6 +112,7 @@ export class AsaDatePickerComponent implements ControlValueAccessor, OnInit, OnC
   @Input() readOnlyInput = false;
   @Input() customStyle: string = "";
   @Input() inputPlaceholder: string | '' = '';
+  @Input() isTimerVertical: boolean = false;
 
   @Input() set minDate(date: Date | string | null) {
     if (date) {

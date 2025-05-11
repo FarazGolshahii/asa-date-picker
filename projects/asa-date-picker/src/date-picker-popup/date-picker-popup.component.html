@@ -1,6 +1,8 @@
-
 <div class="date-picker-popup" [class.rtl]="rtl" [class]="cssClass" tabindex="-1">
-  <div class="date-picker-content">
+  <div class="date-picker-content"
+       [ngClass]="{
+       'date-picker-content-row':!isTimerVertical,
+       'date-picker-content-column':isTimerVertical}">
     <ng-container *ngIf="showSidebar">
       <div *ngIf="isRange" class="period-selector">
         <button
@@ -13,7 +15,7 @@
           <span *ngIf="period.arrow" class="arrow">→</span>
         </button>
       </div>
-      <div *ngIf="!isRange" class="side-selector" #itemSelector >
+      <div *ngIf="!isRange" class="side-selector" #itemSelector>
         <ng-container *ngIf="viewMode == 'days'">
           <button
             *ngFor="let month of monthListNum"
@@ -51,15 +53,22 @@
         </ng-container>
       </div>
     </ng-container>
-    <div class="calendar-backdrop" *ngIf="disableCalendarInteraction"></div>
+    <div class="calendar-backdrop"
+         [ngClass]="{
+       'calendar-backdrop-row':!isTimerVertical,
+       'calendar-backdrop-column':isTimerVertical}"
+         *ngIf="disableCalendarInteraction"></div>
     <div class="calendar">
       <div class="header">
-        <button class="asa-calendar-nav-left" (click)="goPrev()" [disabled]="isPrevMonthDisabled()" tabindex="-1"></button>
+        <button class="asa-calendar-nav-left" (click)="goPrev()" [disabled]="isPrevMonthDisabled()"
+                tabindex="-1"></button>
         <span class="month-year">
-              <span *ngIf="mode != 'year'" class="month-name" (click)="showMonthSelector()">{{ getCurrentMonthName() }}</span>
+              <span *ngIf="mode != 'year'" class="month-name"
+                    (click)="showMonthSelector()">{{ getCurrentMonthName() }}</span>
               <span class="year" (click)="showYearSelector()">{{ getCurrentYear() }}</span>
             </span>
-        <button class="asa-calendar-nav-right" (click)="goNext()" [disabled]="isNextMonthDisabled()" tabindex="-1"></button>
+        <button class="asa-calendar-nav-right" (click)="goNext()" [disabled]="isNextMonthDisabled()"
+                tabindex="-1"></button>
       </div>
       <div *ngIf="viewMode == 'days'">
         <div *ngIf="viewMode === 'days'" class="weekdays">
@@ -136,6 +145,7 @@
         [cssClass]="'embedded-time-picker'"
         [selectedDate]="selectedDate"
         (timeChange)="onTimeChange($event)"
+        [isTimerVertical]="isTimerVertical"
       ></asa-time-picker>
     </div>
   </div>
